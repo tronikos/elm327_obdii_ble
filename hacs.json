@@ -1,0 +1,7 @@
+{
+  "name": "ELM327 OBD-II BLE",
+  "homeassistant": "2026.7.0",
+  "render_readme": true,
+  "zip_release": true,
+  "filename": "elm327_obdii_ble.zip"
+}

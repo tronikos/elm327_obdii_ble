@@ -1,0 +1,36 @@
+---
+name: "Release"
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  release:
+    name: "Release elm327_obdii_ble"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: "⬇️ Checkout the repository"
+        uses: actions/checkout@v6
+
+      - name: "🔢 Adjust version number"
+        shell: bash
+        run: |
+          version="${{ github.event.release.tag_name }}"
+          version="${version,,}"
+          version="${version#v}"
+          yq e -P -o=json \
+            -i ".version = \"${version}\"" \
+            "${{ github.workspace }}/custom_components/elm327_obdii_ble/manifest.json"
+      - name: "📦 Created zipped release package"
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/custom_components/elm327_obdii_ble"
+          zip elm327_obdii_ble.zip -r ./
+      - name: "⬆️ Upload zip to release"
+        uses: softprops/action-gh-release@v3
+        with:
+          files: ${{ github.workspace }}/custom_components/elm327_obdii_ble/elm327_obdii_ble.zip
