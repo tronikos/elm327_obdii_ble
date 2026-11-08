@@ -9,6 +9,8 @@ advertises, so polling resumes instantly when the device comes back in
 range.
 """
 
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -134,6 +136,8 @@ class Elm327ObdiiCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         address = self.entry.data[CONF_ADDRESS]
 
         if not async_address_present(self.hass, address, connectable=True):
+            self._last_state = PollingState.OUT_OF_RANGE
+            self._voltage = None
             self._update_interval_for(PollingState.OUT_OF_RANGE)
             if not self._was_unavailable:
                 _LOGGER.warning("ELM327 adapter at %s is out of range", address)
@@ -144,6 +148,9 @@ class Elm327ObdiiCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         ble_device = async_ble_device_from_address(self.hass, address)
         if ble_device is None:
+            self._last_state = PollingState.OUT_OF_RANGE
+            self._voltage = None
+            self._update_interval_for(PollingState.OUT_OF_RANGE)
             reason = async_address_reachability_diagnostics(
                 self.hass, address, BluetoothReachabilityIntent.CONNECTION
             )
@@ -157,7 +164,10 @@ class Elm327ObdiiCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._polled_cycle, ble_device
         )
 
-        if result is None:
+        if result is None or (not result.any_success and not self._poller.is_connected):
+            self._last_state = PollingState.OUT_OF_RANGE
+            self._voltage = None
+            self._update_interval_for(PollingState.OUT_OF_RANGE)
             if not self._was_unavailable:
                 _LOGGER.warning("ELM327 adapter at %s became unavailable", address)
                 self._was_unavailable = True
@@ -172,6 +182,8 @@ class Elm327ObdiiCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_state = result.state
         if result.voltage is not None:
             self._voltage = result.voltage
+        elif not self.entry.options[CONF_VOLTAGE_CHECK]:
+            self._voltage = None
 
         _LOGGER.debug(
             "%s: Poll result — state=%s, voltage=%s, any_success=%s, data_keys=%s",
@@ -189,7 +201,7 @@ class Elm327ObdiiCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             PollingState.GRACE_PERIOD,
         ):
             return self.data or {}
-        return dict(result.data)
+        return {**(self.data or {}), **result.data}
 
     def _update_interval_for(self, state: PollingState) -> None:
         """Map the polling state to the matching ``update_interval``."""

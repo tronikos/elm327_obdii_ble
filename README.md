@@ -82,12 +82,11 @@ The integration supports three profile sources:
    [obdb.community](https://obdb.community), a community-maintained database
    of 160+ vehicle models with 11,000+ signal definitions. Covers EVs (VW
    e-Golf, Hyundai Ioniq 5, Kia EV6, Tesla Model 3, ...) and ICE vehicles.
-   Mode 01 PIDs in the OBDb profile are automatically promoted to standard
-   sensors.
 
 3. **Import from WiCAN repository** — fetches from the
    [meatpiHQ/wican-fw](https://github.com/meatpiHQ/wican-fw) repository, which
-   has 77 vehicle profiles.
+   has 77 vehicle profiles. Mode 01 PIDs in the WiCAN profile are automatically
+   promoted to standard sensors.
 
 You can also manually add custom PIDs via the integration options after setup.
 
@@ -203,15 +202,13 @@ polling 24/7 and can drain the 12V auxiliary battery over hours or days.
 
 ### Standard OBD-II sensors
 
-When using the default profile, the following sensors are created:
+When using the default profile, the following sensor is created by default:
 
-- **Engine Coolant Temperature** — Mode 01 PID 0x05 (°C)
-- **Ambient Air Temperature** — Mode 01 PID 0x46 (°C)
 - **Fuel Level** — Mode 01 PID 0x2F (%)
-- **Vehicle Voltage** — Mode 01 PID 0x42 (V)
 
 Additional standard PIDs can be enabled via the integration options (engine
-speed, vehicle speed, engine load, MAF rate, engine run time, and 160+ others).
+speed, vehicle speed, engine coolant temperature, ambient air temperature,
+vehicle voltage, engine load, MAF rate, engine run time, and 160+ others).
 
 ### Custom sensors
 

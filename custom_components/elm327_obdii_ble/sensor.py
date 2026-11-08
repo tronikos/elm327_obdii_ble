@@ -1,5 +1,7 @@
 """Sensor platform for the ELM327 OBD-II BLE integration."""
 
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, Any, Final, override
 
@@ -245,7 +247,7 @@ class Elm327ObdiiCustomSensor(Elm327ObdiiEntity, SensorEntity):
             return value
         try:
             return float(value)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return None
 
 

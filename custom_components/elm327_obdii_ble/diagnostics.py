@@ -1,5 +1,7 @@
 """Diagnostics support for the ELM327 OBD-II BLE integration."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import bluetooth

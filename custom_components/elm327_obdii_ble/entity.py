@@ -1,5 +1,7 @@
 """Common parent class for ELM327 OBD-II BLE entities."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, override
 
 from homeassistant.helpers import device_registry as dr

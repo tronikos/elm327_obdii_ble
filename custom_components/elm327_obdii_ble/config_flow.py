@@ -1,5 +1,7 @@
 """Config flow for the ELM327 OBD-II BLE integration."""
 
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, Any, override
 import uuid
@@ -28,7 +30,7 @@ from elm327_obdii import (
     user_input_to_form_defaults,
     validate_fmt,
 )
-from elm327_obdii.forms import form_input_to_fmt_from_hybrid
+from elm327_obdii.forms import fmt_to_string, form_input_to_fmt_from_hybrid
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -871,7 +873,12 @@ class Elm327ObdiiOptionsFlow(config_entries.OptionsFlow):
             if can_filter and not is_hex(can_filter):
                 errors["can_filter"] = "invalid_hex"
 
-            fmt = form_input_to_fmt_from_hybrid(flat_input)
+            fmt_input = flat_input
+            if existing is not None and (
+                flat_input.get("formula") or ""
+            ).strip() == fmt_to_string(existing.fmt or {}):
+                fmt_input = {**flat_input, "formula": ""}
+            fmt = form_input_to_fmt_from_hybrid(fmt_input)
             if fmt is None:
                 errors["formula"] = "invalid_formula"
             else:
@@ -898,7 +905,8 @@ class Elm327ObdiiOptionsFlow(config_entries.OptionsFlow):
                     min_value=as_float(flat_input.get("min_value")),
                     max_value=as_float(flat_input.get("max_value")),
                     expected_bytes=int(flat_input.get("expected_bytes") or 0),
-                    source="manual",
+                    model_years=existing.model_years if existing is not None else None,
+                    source=existing.source if existing is not None else "manual",
                 )
                 if existing is not None:
                     self._profile.custom_pids = [
@@ -912,10 +920,15 @@ class Elm327ObdiiOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None and errors:
             defaults = user_input_to_form_defaults(flat_input)
+            defaults.setdefault("min_value", as_float(flat_input.get("min_value")))
+            defaults.setdefault("max_value", as_float(flat_input.get("max_value")))
         else:
             defaults = (
                 pid_to_form_defaults(existing) if existing else empty_form_defaults()
             )
+            if existing is not None:
+                defaults.setdefault("min_value", existing.min_value)
+                defaults.setdefault("max_value", existing.max_value)
 
         return self.async_show_form(
             step_id="custom_pid_edit",
